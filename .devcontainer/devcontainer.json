@@ -1,0 +1,16 @@
+{
+	"name": "HephoraSDK Container",
+	"build": {
+		// Path is relative to the devcontainer.json file.
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools-extension-pack",
+				"Gxl.git-graph-3"
+			]
+		}
+	},
+	"workspaceFolder": "/workspaces/hephora-sdk"
+}
