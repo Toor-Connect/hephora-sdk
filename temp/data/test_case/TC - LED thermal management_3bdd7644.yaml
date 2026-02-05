@@ -1,0 +1,6 @@
+_profile: test_case
+_id: 3bdd7644-ded0-4bdd-95e8-4dab79e63edd
+_label: TC - LED thermal management
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: Verify LED thermal management
+requirement: 813e5950-2d2c-413e-99c3-575a622094cb

@@ -1,0 +1,19 @@
+name: project
+kind: root
+description: Project
+fields:
+  version:
+    type: string
+  tags:
+    type: array
+    items:
+      type: string
+children:
+  requirements:
+    node: requirement
+  attachments:
+    node: attachment
+  components:
+    node: component
+  test_cases:
+    node: test_case

@@ -1,0 +1,7 @@
+_profile: component
+_id: 41bc2b33-8530-41bc-90cf-d2f0edd04a2a
+_label: Thermal Management
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: Heatsink and thermal control for LED junction
+requirements:
+  - 813e5950-2d2c-413e-99c3-575a622094cb

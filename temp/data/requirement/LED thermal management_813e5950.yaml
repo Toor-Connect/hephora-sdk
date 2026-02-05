@@ -1,0 +1,8 @@
+_profile: requirement
+_id: 813e5950-2d2c-413e-99c3-575a622094cb
+_label: LED thermal management
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+active: true
+priority: high
+refs:
+  []

@@ -1,0 +1,6 @@
+_profile: test_case
+_id: 8f64b025-709d-4f64-8c3a-994b3a68acc0
+_label: TC - LED dimming requirement
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: Verify LED dimming requirement
+requirement: 39ea6b52-1968-49ea-915d-c8546ee430e2

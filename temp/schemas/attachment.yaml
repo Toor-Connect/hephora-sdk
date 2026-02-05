@@ -1,0 +1,9 @@
+name: attachment
+kind: node
+description: Attachment
+fields:
+  filename:
+    type: string
+  filetype:
+    type: enum
+    values: [pdf, txt]

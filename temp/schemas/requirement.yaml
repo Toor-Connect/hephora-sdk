@@ -1,0 +1,14 @@
+name: requirement
+kind: node
+description: Requirement
+fields:
+  priority:
+    type: enum
+    values: [low, medium, high]
+  active:
+    type: boolean
+  refs:
+    type: array
+    items:
+      type: reference
+      target: attachment

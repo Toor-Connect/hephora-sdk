@@ -1,0 +1,6 @@
+add_subdirectory(schema_manager)
+add_subdirectory(schema_exporter)
+add_subdirectory(yaml_data_parser)
+add_subdirectory(data_backend)
+add_subdirectory(engine)
+add_subdirectory(lua_engine)

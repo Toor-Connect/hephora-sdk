@@ -1,0 +1,8 @@
+_profile: requirement
+_id: 994a250d-ef49-494a-8f40-a8918049e00e
+_label: LED color consistency
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+active: true
+priority: medium
+refs:
+  []

@@ -1,0 +1,8 @@
+_profile: requirement
+_id: 088bd198-73b5-488b-b357-31484f3a420f
+_label: LED power efficiency
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+active: true
+priority: medium
+refs:
+  []

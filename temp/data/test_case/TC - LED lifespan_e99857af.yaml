@@ -1,0 +1,6 @@
+_profile: test_case
+_id: e99857af-5b9e-4998-b9de-1d42e218b235
+_label: TC - LED lifespan
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: Verify LED lifespan
+requirement: 2f829bf1-6123-4f82-9a9a-3859cf95f477

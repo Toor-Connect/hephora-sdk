@@ -1,0 +1,12 @@
+name: test_case
+kind: node
+description: Test case
+fields:
+  description:
+    type: string
+  requirement:
+    type: reference
+    target: requirement
+  result:
+    type: enum
+    values: [pass, fail]

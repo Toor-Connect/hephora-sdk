@@ -1,0 +1,11 @@
+name: component
+kind: node
+description: Component
+fields:
+  description:
+    type: string
+  requirements:
+    type: array
+    items:
+      type: reference
+      target: requirement

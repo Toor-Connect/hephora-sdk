@@ -1,0 +1,7 @@
+_profile: component
+_id: 817d8554-1ac4-417d-85ae-5766a3ec84a9
+_label: Power Supply
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: High-efficiency LED driver and power regulation
+requirements:
+  - 088bd198-73b5-488b-b357-31484f3a420f

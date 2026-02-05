@@ -1,0 +1,8 @@
+_profile: requirement
+_id: 39ea6b52-1968-49ea-915d-c8546ee430e2
+_label: LED dimming requirement
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+active: true
+priority: high
+refs:
+  []

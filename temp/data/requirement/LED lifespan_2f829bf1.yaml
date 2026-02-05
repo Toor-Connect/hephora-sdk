@@ -1,0 +1,8 @@
+_profile: requirement
+_id: 2f829bf1-6123-4f82-9a9a-3859cf95f477
+_label: LED lifespan
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+active: true
+priority: medium
+refs:
+  []

@@ -1,0 +1,6 @@
+_profile: test_case
+_id: 14605583-227a-4460-8a81-8f1d5cdb820c
+_label: TC - LED color consistency
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: Verify LED color consistency
+requirement: 994a250d-ef49-494a-8f40-a8918049e00e

@@ -1,0 +1,7 @@
+_profile: component
+_id: a9052a02-981e-4905-baeb-e7c5cf95dad8
+_label: Optics Module
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: Lens and diffuser for color consistency
+requirements:
+  - 994a250d-ef49-494a-8f40-a8918049e00e

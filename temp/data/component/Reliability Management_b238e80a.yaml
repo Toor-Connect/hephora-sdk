@@ -1,0 +1,7 @@
+_profile: component
+_id: b238e80a-2d0b-4238-9d9f-02900f08f582
+_label: Reliability Management
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: Lifetime monitoring and derating control
+requirements:
+  - 2f829bf1-6123-4f82-9a9a-3859cf95f477

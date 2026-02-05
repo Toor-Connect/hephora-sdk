@@ -1,0 +1,6 @@
+_profile: test_case
+_id: 445203c7-ac1a-4452-a834-31fe608c9ced
+_label: TC - LED power efficiency
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: Verify LED power efficiency
+requirement: 088bd198-73b5-488b-b357-31484f3a420f

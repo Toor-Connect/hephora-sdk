@@ -1,0 +1,7 @@
+_profile: component
+_id: bc5689cd-2b7d-4c56-b44d-88e22fc2586d
+_label: Dimming Controller
+_parent_id: bd8f2963-2a6f-4d8f-9178-181f21cd2471
+description: PWM dimming and brightness control
+requirements:
+  - 39ea6b52-1968-49ea-915d-c8546ee430e2
