@@ -38,20 +38,6 @@ FetchContent_MakeAvailable(nlohmann_json)
 set(nlohmann_json_VERSION 3.11.2)
 
 FetchContent_Declare(
-  nlohmann_json_schema_validator
-  GIT_REPOSITORY https://github.com/pboettch/json-schema-validator.git
-  GIT_TAG 2.3.0
-)
-FetchContent_MakeAvailable(nlohmann_json_schema_validator)
-
-FetchContent_Declare(
-  httplib
-  GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
-  GIT_TAG v0.26.0
-)
-FetchContent_MakeAvailable(httplib)
-
-FetchContent_Declare(
   lua
   GIT_REPOSITORY https://github.com/lua/lua.git
   GIT_TAG v5.4.7

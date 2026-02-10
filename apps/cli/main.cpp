@@ -751,11 +751,16 @@ static std::string help_text()
     arr-set <profile> <id> <field>[i][.sub]=<value>
     delete <profile> <id>
     get <profile> <id>
+    get-many <profile> <id...>
+    get-by-id <id>
+    get-by-ids <id...>
     get-field <profile> <id> <field>      # field can be obj.sub or arr[i].sub
     get-select <profile> <id> [field]   # field can be obj.sub or arr[i].sub
     list <profile>
     query <json>                   # JSON body like HTTP /query
     get-children <profile> <id>    # list child nodes across profiles
+    get-children-by-id <id>        # list child nodes for any node with this id
+    get-refs-to-by-id <id>         # list nodes referencing any node with this id
     schemas                        # list schemas with root marker
     get-profiles                   # list profiles with kind
     get-schema <profile>           # show raw YAML schema
@@ -1022,6 +1027,64 @@ try
                 }
                 print_json_ok(cmd, {{"node", node_to_json(*snap)}});
             }
+            else if (cmd == "get-many")
+            {
+                if (args.size() < 3)
+                {
+                    print_json_error(cmd, "usage: get-many <profile> <id...>");
+                    return false;
+                }
+                const std::string profile = args[1];
+                nlohmann::json items = nlohmann::json::array();
+                for (size_t i = 2; i < args.size(); ++i)
+                {
+                    auto snap = engine.fetch(NodeKey{profile, args[i]});
+                    if (snap)
+                        items.push_back(node_to_json(*snap));
+                    else
+                        items.push_back({{"profile", profile}, {"id", args[i]}, {"missing", true}});
+                }
+                print_json_ok(cmd, {{"count", items.size()}, {"nodes", items}});
+            }
+            else if (cmd == "get-by-id")
+            {
+                if (args.size() != 2)
+                {
+                    print_json_error(cmd, "usage: get-by-id <id>");
+                    return false;
+                }
+                const std::string id = args[1];
+                nlohmann::json items = nlohmann::json::array();
+                for (const auto &[profile, _] : sm.registry().schemas())
+                {
+                    auto snap = engine.fetch(NodeKey{profile, id});
+                    if (snap)
+                        items.push_back(node_to_json(*snap));
+                }
+                print_json_ok(cmd, {{"count", items.size()}, {"nodes", items}});
+            }
+            else if (cmd == "get-by-ids")
+            {
+                if (args.size() < 2)
+                {
+                    print_json_error(cmd, "usage: get-by-ids <id...>");
+                    return false;
+                }
+                nlohmann::json results = nlohmann::json::array();
+                for (size_t i = 1; i < args.size(); ++i)
+                {
+                    const std::string id = args[i];
+                    nlohmann::json items = nlohmann::json::array();
+                    for (const auto &[profile, _] : sm.registry().schemas())
+                    {
+                        auto snap = engine.fetch(NodeKey{profile, id});
+                        if (snap)
+                            items.push_back(node_to_json(*snap));
+                    }
+                    results.push_back({{"id", id}, {"count", items.size()}, {"nodes", items}});
+                }
+                print_json_ok(cmd, {{"count", results.size()}, {"results", results}});
+            }
             else if (cmd == "list")
             {
                 if (args.size() != 2)
@@ -1140,6 +1203,81 @@ try
                         items.push_back({{"profile", childKey.profile}, {"id", childKey.id.value_or("")}});
                 }
                 print_json_ok(cmd, {{"count", childrenKeys.size()}, {"rows", items}});
+            }
+            else if (cmd == "get-children-by-id")
+            {
+                if (args.size() != 2)
+                {
+                    print_json_error(cmd, "usage: get-children-by-id <id>");
+                    return false;
+                }
+                const std::string node_id = args[1];
+                const auto &schemas = sm.registry().schemas();
+                if (schemas.empty())
+                {
+                    print_json_ok(cmd, {{"count", 0}, {"rows", nlohmann::json::array()}});
+                    return false;
+                }
+
+                std::set<NodeKey> childrenKeys;
+                for (const auto &[profile, _schemaPtr] : schemas)
+                {
+                    NodeKey parentKey{profile, node_id};
+                    if (!engine.exists(parentKey))
+                        continue;
+                    for (const auto &[childProfile, _childSchema] : schemas)
+                    {
+                        auto children = engine.childrenOf(parentKey, childProfile);
+                        childrenKeys.insert(children.begin(), children.end());
+                    }
+                }
+
+                nlohmann::json items = nlohmann::json::array();
+                for (const auto &childKey : childrenKeys)
+                {
+                    auto snap = engine.fetch(childKey);
+                    if (snap)
+                        items.push_back(node_summary_json(*snap));
+                    else
+                        items.push_back({{"profile", childKey.profile}, {"id", childKey.id.value_or("")}});
+                }
+                print_json_ok(cmd, {{"count", childrenKeys.size()}, {"rows", items}});
+            }
+            else if (cmd == "get-refs-to-by-id")
+            {
+                if (args.size() != 2)
+                {
+                    print_json_error(cmd, "usage: get-refs-to-by-id <id>");
+                    return false;
+                }
+                const std::string node_id = args[1];
+                const auto &schemas = sm.registry().schemas();
+                if (schemas.empty())
+                {
+                    print_json_ok(cmd, {{"count", 0}, {"rows", nlohmann::json::array()}});
+                    return false;
+                }
+
+                std::set<NodeKey> refsKeys;
+                for (const auto &[profile, _schemaPtr] : schemas)
+                {
+                    NodeKey targetKey{profile, node_id};
+                    if (!engine.exists(targetKey))
+                        continue;
+                    auto refs = engine.refsTo(targetKey);
+                    refsKeys.insert(refs.begin(), refs.end());
+                }
+
+                nlohmann::json items = nlohmann::json::array();
+                for (const auto &refKey : refsKeys)
+                {
+                    auto snap = engine.fetch(refKey);
+                    if (snap)
+                        items.push_back(node_summary_json(*snap));
+                    else
+                        items.push_back({{"profile", refKey.profile}, {"id", refKey.id.value_or("")}});
+                }
+                print_json_ok(cmd, {{"count", refsKeys.size()}, {"rows", items}});
             }
             else if (cmd == "execute-command")
             {

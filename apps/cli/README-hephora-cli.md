@@ -5,6 +5,8 @@ schema-driven YAML data stored via an SQLite backend. It covers creating and
 updating nodes, working with arrays (strings, references, and arrays of
 objects), querying, and exporting to YAML.
 
+> **Platform**: Linux only (currently).
+
 ---
 
 ## Quick Start
@@ -82,11 +84,16 @@ create <profile> [k=v ...]
 update <profile> <id> [k=v ...]
 delete <profile> <id>
 get <profile> <id>
+get-many <profile> <id...>
+get-by-id <id>
+get-by-ids <id...>
 get-field <profile> <id> <field>
 get-select <profile> <id> <field>[i][.sub]
 list <profile>
 query <json>
 get-children <profile> <id>
+get-children-by-id <id>
+get-refs-to-by-id <id>
 get-profiles
 get-schema <profile>
 execute-command <profile> <id> <command>
@@ -129,6 +136,13 @@ update requirement R-2 title="Boot under 1.5s"
 get <profile> <id>
 ```
 
+### Batch and id‑only helpers
+```bash
+get-many <profile> <id...>
+get-by-id <id>
+get-by-ids <id...>
+```
+
 ### One field only
 ```bash
 get-field <profile> <id> <field>
@@ -150,6 +164,13 @@ get-select requirement R-1 objects[0].name     # one property
 
 > The CLI pretty-printer expands arrays of objects for readability in `get`,
 > `get-field`, and `get-select`.
+
+### Children and references (id‑only)
+```bash
+get-children-by-id <id>
+get-refs-to-by-id <id>
+```
+> These return **summaries only** (no `fields`). Use `get` for full nodes.
 
 ---
 
@@ -300,6 +321,9 @@ arr-del requirement R-1 tags value="hard real-time"
 - `update <prof> <id> [k=v ...]`
 - `delete <prof> <id>`
 - `get <prof> <id>`
+- `get-many <prof> <id...>`
+- `get-by-id <id>`
+- `get-by-ids <id...>`
 - `get-field <prof> <id> <field>`
 - `get-select <prof> <id> <field>[i][.sub]`
 - `list <prof>`
@@ -308,6 +332,9 @@ arr-del requirement R-1 tags value="hard real-time"
 - `arr-set <prof> <id> <field>[i][.sub]=<value>`
 - `load-schemas <dir>`
 - `load-data <dir>`
+- `get-children <prof> <id>`
+- `get-children-by-id <id>`
+- `get-refs-to-by-id <id>`
 Changes are auto-flushed; no explicit flush commands.
 
 ---

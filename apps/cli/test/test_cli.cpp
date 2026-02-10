@@ -241,6 +241,26 @@ TEST_CASE("hephora-sdk-cli non-interactive workflow", "[cli]")
         REQUIRE(get_json["result"]["node"]["label"].get<std::string>() == "Demo");
     }
 
+    SECTION("get-many get-by-id get-by-ids")
+    {
+        auto get_many_out = run_cmd(base + "get-many project P-1 P-2", out);
+        auto get_many_json = parse_json_output(get_many_out);
+        REQUIRE(get_many_json["ok"].get<bool>());
+        REQUIRE(get_many_json["result"]["count"].get<int>() == 2);
+
+        auto get_by_id_out = run_cmd(base + "get-by-id R-1", out);
+        auto get_by_id_json = parse_json_output(get_by_id_out);
+        REQUIRE(get_by_id_json["ok"].get<bool>());
+        REQUIRE(get_by_id_json["result"]["count"].get<int>() == 1);
+        REQUIRE(get_by_id_json["result"]["nodes"][0].contains("fields"));
+
+        auto get_by_ids_out = run_cmd(base + "get-by-ids P-1 R-1", out);
+        auto get_by_ids_json = parse_json_output(get_by_ids_out);
+        REQUIRE(get_by_ids_json["ok"].get<bool>());
+        REQUIRE(get_by_ids_json["result"]["count"].get<int>() == 2);
+        REQUIRE(get_by_ids_json["result"]["results"].size() == 2);
+    }
+
     SECTION("profiles and schema")
     {
         auto profiles_out = run_cmd(base + "get-profiles", out);
@@ -302,6 +322,20 @@ TEST_CASE("hephora-sdk-cli non-interactive workflow", "[cli]")
             auto rows_dump = rows.dump();
             REQUIRE(rows_dump.find("attachment") != std::string::npos);
             REQUIRE(rows_dump.find("requirement") != std::string::npos);
+
+            auto children_by_id_out = run_cmd(base + "get-children-by-id P-1", out);
+            auto children_by_id_json = parse_json_output(children_by_id_out);
+            REQUIRE(children_by_id_json["ok"].get<bool>());
+            auto children_by_id_rows = children_by_id_json["result"]["rows"];
+            REQUIRE(children_by_id_rows.size() > 0);
+            REQUIRE_FALSE(children_by_id_rows[0].contains("fields"));
+
+            auto refs_out = run_cmd(base + "get-refs-to-by-id A-1", out);
+            auto refs_json = parse_json_output(refs_out);
+            REQUIRE(refs_json["ok"].get<bool>());
+            auto refs_rows = refs_json["result"]["rows"];
+            REQUIRE(refs_rows.size() >= 2);
+            REQUIRE_FALSE(refs_rows[0].contains("fields"));
 
             run_cmd(base + "arr-del project P-1 tags value=gamma", out);
             auto tags_out = run_cmd(base + "get-field project P-1 tags", out);
