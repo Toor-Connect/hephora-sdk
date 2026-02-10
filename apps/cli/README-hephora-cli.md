@@ -47,14 +47,16 @@ Error:
 
 ### Create some data
 
+> IDs are auto-generated. The created node (including its `id`) is returned in the `create` response.
+
 ```bash
-> create project P-1 label="Phoenix" project_name=Phoenix version=1
+> create project label="Phoenix" project_name=Phoenix version=1
 {"ok":true,"command":"create","result":{...}}
 
-> create requirement R-1 parent=P-1 title="Brake latency under 100 ms" priority=high active=true
+> create requirement parent=<project_id> title="Brake latency under 100 ms" priority=high active=true
 {"ok":true,"command":"create","result":{...}}
 
-> create attachment A-1 parent=P-1 filename="spec.pdf" filetype=pdf path="/docs/spec.pdf"
+> create attachment parent=<project_id> filename="spec.pdf" filetype=pdf path="/docs/spec.pdf"
 {"ok":true,"command":"create","result":{...}}
 ```
 
@@ -64,10 +66,10 @@ Error:
 Use the array helpers:
 
 ```bash
-> arr-add requirement R-1 references A-1       # push one reference
+> arr-add requirement <requirement_id> references <attachment_id>       # push one reference
 {"ok":true,"command":"arr-add","result":{...}}
 
-> get requirement R-1
+> get requirement <requirement_id>
 {"ok":true,"command":"get","result":{...}}
 ```
 
@@ -119,12 +121,12 @@ arr-set <profile> <id> <field>[i][.sub]=<value>
 
 ```bash
 # Create
-create project P-2 label="Nova" project_name=Nova version=2
-create requirement R-2 parent=P-2 title="Boot under 2s" priority=medium active=true
+create project label="Nova" project_name=Nova version=2
+create requirement parent=<project_id> title="Boot under 2s" priority=medium active=true
 
 # Patch specific fields
-update requirement R-2 priority=high
-update requirement R-2 title="Boot under 1.5s"
+update requirement <requirement_id> priority=high
+update requirement <requirement_id> title="Boot under 1.5s"
 ```
 
 ---
@@ -147,19 +149,19 @@ get-by-ids <id...>
 ```bash
 get-field <profile> <id> <field>
 # examples
-get-field requirement R-1 title
-get-field requirement R-1 specs
-get-field requirement R-1 references
-get-field requirement R-1 objects
+get-field requirement <requirement_id> title
+get-field requirement <requirement_id> specs
+get-field requirement <requirement_id> references
+get-field requirement <requirement_id> objects
 ```
 
 ### Array selectors
 ```bash
 get-select <profile> <id> <field>[i][.sub]
 # examples
-get-select requirement R-1 references[0]
-get-select requirement R-1 objects[0]          # whole object
-get-select requirement R-1 objects[0].name     # one property
+get-select requirement <requirement_id> references[0]
+get-select requirement <requirement_id> objects[0]          # whole object
+get-select requirement <requirement_id> objects[0].name     # one property
 ```
 
 > The CLI pretty-printer expands arrays of objects for readability in `get`,
@@ -291,23 +293,23 @@ load-schemas ./schemas
 
 # 2) Create project and requirement
 create project label="Phoenix" project_name=Phoenix version=1
-create requirement parent=P-1 title="Brake latency under 100 ms" priority=high active=true
+create requirement parent=<project_id> title="Brake latency under 100 ms" priority=high active=true
 
 # 3) Add references and objects to the requirement
-create attachment A-1 parent=P-1 filename="spec.pdf" filetype=pdf path="/docs/spec.pdf"
-arr-add requirement R-1 references A-1
-arr-add requirement R-1 tags "hard real-time"
-arr-add requirement R-1 objects name="Brake ECU" value="HW-REV-B"
+create attachment parent=<project_id> filename="spec.pdf" filetype=pdf path="/docs/spec.pdf"
+arr-add requirement <requirement_id> references <attachment_id>
+arr-add requirement <requirement_id> tags "hard real-time"
+arr-add requirement <requirement_id> objects name="Brake ECU" value="HW-REV-B"
 
 # 4) Inspect
-get requirement R-1
-get-field requirement R-1 objects
-get-select requirement R-1 objects[0]
-get-select requirement R-1 objects[0].name
+get requirement <requirement_id>
+get-field requirement <requirement_id> objects
+get-select requirement <requirement_id> objects[0]
+get-select requirement <requirement_id> objects[0].name
 
 # 5) Modify and remove
-arr-set requirement R-1 objects[0].name="Brake ECU v2"
-arr-del requirement R-1 tags value="hard real-time"
+arr-set requirement <requirement_id> objects[0].name="Brake ECU v2"
+arr-del requirement <requirement_id> tags value="hard real-time"
 
 # 6) Save to YAML
 # (auto-flushed after mutations)
