@@ -376,7 +376,7 @@ requirement
 ```bash
 # create nodes
 hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
-	update project 8e8b1b74-6c2b-4a52-8b3f-5c7e4f1b9a2a label="Phoenix" project_name=Phoenix version=1.0
+	create project label="Phoenix" project_name=Phoenix version=1.0
 # => {"ok":true,"command":"update","result":{"node":{"profile":"project","id":"8e8b1b74-6c2b-4a52-8b3f-5c7e4f1b9a2a","label":"Phoenix","parent":"","fields":{"project_name":"Phoenix","version":"1.0"}}}}
 
 hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
