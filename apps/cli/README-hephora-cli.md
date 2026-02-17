@@ -12,7 +12,7 @@ objects), querying, and exporting to YAML.
 ## Quick Start
 
 ```bash
-./hephora-sdk-cli
+./hephora-sdk-cli --interactive
 hephora-sdk-cli — type 'help' to see commands.
 > load-schemas ./schemas
 schemas loaded. root = project
@@ -26,6 +26,27 @@ schemas loaded. root = project
 
 > Non-interactive mode requires `--schemas`, `--data`, and `--scripts` so the
 > workspace is always initialized before the command runs.
+
+> Interactive mode is enabled only when you pass `--interactive` (or `-it`). Running the CLI without arguments will not open the prompt.
+
+### Environment variables (defaults)
+
+You can set environment variables so you don’t need to pass the three flags on every call. Flags always override env vars.
+
+- `HEPHORA_SCHEMAS`: directory for schema YAMLs
+- `HEPHORA_DATA`: directory for data YAMLs
+- `HEPHORA_SCRIPTS`: directory for Lua scripts
+
+Examples:
+
+```bash
+export HEPHORA_SCHEMAS=./schemas
+export HEPHORA_DATA=./data
+export HEPHORA_SCRIPTS=./scripts
+
+# Now you can omit flags
+./hephora-sdk-cli list project
+```
 
 > The CLI must load your **profile schemas** before you can create data. The
 > directory should contain `.yaml` or `.yml` files that define profiles such as
@@ -82,6 +103,8 @@ help
 load-schemas <dir>
 load-scripts <dir>
 load-workspace <schemas> <data> <scripts>
+> Tip: If `HEPHORA_SCHEMAS`, `HEPHORA_DATA`, and `HEPHORA_SCRIPTS` are set, you can call `load-workspace` without arguments in interactive mode (start with `--interactive`).
+
 create <profile> [k=v ...]
 update <profile> <id> [k=v ...]
 delete <profile> <id>

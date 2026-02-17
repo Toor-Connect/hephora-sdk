@@ -370,7 +370,7 @@ TEST_CASE("hephora-sdk-cli non-interactive workflow", "[cli]")
                 "get-select project P-1 refs[0]\n"
                 "quit\n";
 
-            auto out_text = run_cmd_with_input("\"" + cli + "\"", input, out, in);
+            auto out_text = run_cmd_with_input("\"" + cli + "\" --interactive", input, out, in);
             auto lines = parse_json_lines(out_text);
             REQUIRE(lines.size() >= 5);
             REQUIRE(lines[0]["ok"].get<bool>());

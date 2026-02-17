@@ -403,6 +403,17 @@ hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
 # => {"ok":true,"command":"query","result":{"count":1,"rows":[{"profile":"requirement","id":"5b1dfc12-1f6a-4b67-9f40-1c0e0b7f6c8c","label":"Brake latency under 100 ms"}]}}
 ```
 
+Interactive mode (prompt)
+
+Start the CLI prompt explicitly with `--interactive` (or `-it`). Without it, you must pass a command.
+
+```bash
+hephora-sdk-cli --interactive
+# inside the prompt:
+load-workspace ./schemas ./data ./scripts
+list project
+```
+
 ## Environment Variables (defaults for CLI paths)
 
 You can set environment variables to avoid passing `--schemas`, `--data`, and `--scripts` each time. Flags always override environment values.

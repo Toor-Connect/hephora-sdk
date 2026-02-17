@@ -1616,44 +1616,51 @@ try
         return false;
     };
 
-    if (argc > 1)
+    // Parse arguments and decide interactive vs non-interactive
+    bool interactive = false;
+    std::optional<std::string> schemas_dir;
+    std::optional<std::string> data_dir;
+    std::optional<std::string> scripts_dir;
+    std::vector<std::string> cmd_args;
+
+    for (int i = 1; i < argc; ++i)
     {
-        std::optional<std::string> schemas_dir;
-        std::optional<std::string> data_dir;
-        std::optional<std::string> scripts_dir;
-
-        std::vector<std::string> cmd_args;
-        for (int i = 1; i < argc; ++i)
+        std::string arg = argv[i];
+        if (arg == "-it" || arg == "--interactive")
         {
-            std::string arg = argv[i];
-            if (arg == "--schemas" && i + 1 < argc)
-            {
-                schemas_dir = argv[++i];
-                continue;
-            }
-            if (arg == "--data" && i + 1 < argc)
-            {
-                data_dir = argv[++i];
-                continue;
-            }
-            if (arg == "--scripts" && i + 1 < argc)
-            {
-                scripts_dir = argv[++i];
-                continue;
-            }
-            if (arg == "--help" || arg == "-h")
-            {
-                print_json_ok("help", {{"text", help_text()}});
-                return 0;
-            }
-
-            cmd_args.assign(argv + i, argv + argc);
-            break;
+            interactive = true;
+            continue;
         }
+        if (arg == "--schemas" && i + 1 < argc)
+        {
+            schemas_dir = argv[++i];
+            continue;
+        }
+        if (arg == "--data" && i + 1 < argc)
+        {
+            data_dir = argv[++i];
+            continue;
+        }
+        if (arg == "--scripts" && i + 1 < argc)
+        {
+            scripts_dir = argv[++i];
+            continue;
+        }
+        if (arg == "--help" || arg == "-h")
+        {
+            print_json_ok("help", {{"text", help_text()}});
+            return 0;
+        }
+        // Remaining tokens constitute the command
+        cmd_args.assign(argv + i, argv + argc);
+        break;
+    }
 
+    if (!interactive)
+    {
         if (cmd_args.empty())
         {
-            print_json_error("args", "missing command");
+            print_json_error("args", "missing command (use --interactive for interactive mode)");
             print_json_ok("help", {{"text", help_text()}});
             return 1;
         }
@@ -1677,7 +1684,7 @@ try
 
         if (!schemas_dir || !data_dir || !scripts_dir)
         {
-            print_json_error("args", "non-interactive mode requires --schemas, --data, and --scripts");
+            print_json_error("args", "non-interactive mode requires --schemas, --data, and --scripts (or set env vars)");
             print_json_ok("help", {{"text", help_text()}});
             return 1;
         }
@@ -1713,7 +1720,8 @@ try
         return 0;
     }
 
-    std::cerr << "hephora-sdk-cli — type 'help' to see commands." << std::endl;
+    // Interactive mode
+    std::cerr << "hephora-sdk-cli — interactive mode. Type 'help' to see commands." << std::endl;
 
     std::string line;
     while (true)
