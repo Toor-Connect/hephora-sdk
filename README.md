@@ -421,3 +421,73 @@ hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
 - **C++20** compiler (GCC/Clang)
 - **SQLite3** development headers
 - A build tool (e.g., **Ninja** or **Make**)
+
+## Docker Integration (install in other projects)
+
+Install and use `hephora-sdk-cli` in other Dockerized projects. Keep it simple: build once (Option A) or copy from a base image (Option B).
+
+### Option A — Build from source
+
+Use this when you want a specific commit/tag and don’t have a prebuilt artifact.
+
+Multi‑stage build explained:
+- `FROM debian:bookworm-slim AS hephora-builder`: names the first stage `hephora-builder` where we compile the CLI.
+- `FROM debian:bookworm-slim AS app`: starts a clean second stage `app` for the final, smaller runtime image.
+- `COPY --from=hephora-builder ...`: copies the built CLI from the `hephora-builder` stage into the `app` stage.
+
+```Dockerfile
+FROM debian:bookworm-slim AS hephora-builder
+ARG DEBIAN_FRONTEND=noninteractive
+ARG HEPHORA_REF=master  # or a tag/commit
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		build-essential cmake ninja-build git pkg-config libsqlite3-dev liblua5.4-dev ca-certificates \
+	&& rm -rf /var/lib/apt/lists/*
+
+# Fetch and build
+WORKDIR /opt
+RUN git clone --depth 1 --branch "$HEPHORA_REF" https://github.com/Toor-Connect/hephora-sdk.git
+WORKDIR /opt/hephora-sdk
+RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DHEPHORA_BUILD_APPS=ON \
+ && cmake --build build --config Release \
+ && cmake --install build --prefix /opt/hephora
+
+FROM debian:bookworm-slim AS app
+ARG DEBIAN_FRONTEND=noninteractive
+# Runtime deps (SQLite + C++ runtime)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		libsqlite3-0 liblua5.4-0 libstdc++6 ca-certificates \
+	&& rm -rf /var/lib/apt/lists/*
+
+# Copy the CLI into PATH
+COPY --from=hephora-builder /opt/hephora/bin/hephora-sdk-cli /usr/local/bin/hephora-sdk-cli
+
+# Optionally copy example schemas/scripts if you vendor them
+# COPY ./schemas /app/schemas
+# COPY ./scripts /app/scripts
+
+WORKDIR /app
+ENTRYPOINT ["hephora-sdk-cli"]
+```
+
+Build and run:
+
+```bash
+docker build -t my-app:with-hephora .
+docker run --rm -it my-app:with-hephora --help
+```
+
+
+### Runtime dependencies
+
+- libsqlite3: Debian/Ubuntu `libsqlite3-0`
+- Lua: Debian/Ubuntu `liblua5.4-0`
+- C++ runtime: `libstdc++6`
+
+The CLI links the SDK’s static libraries; runtime deps are minimal.
+
+### Notes
+
+- Install prefix: In Option A the CLI ends up at `/opt/hephora/bin/hephora-sdk-cli` and is copied to `/usr/local/bin`.
+- Linux-only: Current builds target Linux.
+- Reproducibility: Pin to a tag/commit in Option A.

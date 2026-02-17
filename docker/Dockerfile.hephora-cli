@@ -1,0 +1,30 @@
+# Example multi-stage Dockerfile that builds and installs hephora-sdk-cli
+# Use as a reference or COPY into your own project and adapt.
+
+# ---------- builder ----------
+FROM debian:bookworm-slim AS hephora-builder
+ARG DEBIAN_FRONTEND=noninteractive
+ARG HEPHORA_REF=master
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake ninja-build git pkg-config libsqlite3-dev ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt
+RUN git clone --depth 1 --branch "$HEPHORA_REF" https://github.com/Toor-Connect/hephora-sdk.git
+WORKDIR /opt/hephora-sdk
+RUN cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DHEPHORA_BUILD_APPS=ON \
+ && cmake --build build --config Release \
+ && cmake --install build --prefix /opt/hephora
+
+# ---------- runtime ----------
+FROM debian:bookworm-slim AS app
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsqlite3-0 libstdc++6 ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=hephora-builder /opt/hephora/bin/hephora-sdk-cli /usr/local/bin/hephora-sdk-cli
+
+WORKDIR /app
+ENTRYPOINT ["hephora-sdk-cli"]

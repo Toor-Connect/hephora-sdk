@@ -4,9 +4,12 @@ set(LIBRARY_NAME hephora-luaengine)
 add_library(${LIBRARY_NAME} STATIC ${CMAKE_CURRENT_SOURCE_DIR}/LuaScriptsRegistry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/LuaEngine.cpp)
 
-target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(Lua REQUIRED)
+
+target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${LUA_INCLUDE_DIR})
 target_link_libraries(${LIBRARY_NAME} PUBLIC hephora-core
-    PRIVATE lua nlohmann_json::nlohmann_json)
+    PRIVATE ${LUA_LIBRARIES} nlohmann_json::nlohmann_json)
 
 # enable_testing()
 # include(Catch)
