@@ -10,6 +10,7 @@
 #include <regex>
 #include <optional>
 #include <set>
+#include <cstdlib>
 
 #include "SchemaManager.h"
 #include "SQLiteDataBackend.h"
@@ -744,6 +745,8 @@ static std::string help_text()
     load-schemas <dir>              # loads all .yaml/.yml from folder
     load-scripts <dir>              # loads all .lua from folder
     load-workspace <schemas> <data> <scripts>  # reset and reload workspace
+        # Or: with env vars set (HEPHORA_SCHEMAS, HEPHORA_DATA, HEPHORA_SCRIPTS)
+        #     just run: load-workspace
     create <profile> [k=v ...] # child profiles REQUIRE: parent=<parent_id>
     update <profile> <id> [k=v ...] # same as create; upsert semantics
     arr-add <profile> <id> <field> <value>
@@ -770,6 +773,13 @@ static std::string help_text()
 
 Non-interactive mode:
     hephora-sdk-cli --schemas <dir> --data <dir> --scripts <dir> <command> [args...]
+    # Environment variable defaults (CLI flags override env):
+    #   HEPHORA_SCHEMAS=<dir>
+    #   HEPHORA_DATA=<dir>
+    #   HEPHORA_SCRIPTS=<dir>
+    # When set, you can omit the flags:
+    #   HEPHORA_SCHEMAS=./schemas HEPHORA_DATA=./data HEPHORA_SCRIPTS=./scripts \
+    #     hephora-sdk-cli list project
     # Example:
     # hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts list project
  )";
@@ -841,6 +851,41 @@ try
             {
                 if (args.size() != 4)
                 {
+                    // Allow env-var driven load-workspace (no args) if all are provided
+                    const char *envSchemas = std::getenv("HEPHORA_SCHEMAS");
+                    const char *envData = std::getenv("HEPHORA_DATA");
+                    const char *envScripts = std::getenv("HEPHORA_SCRIPTS");
+                    if (args.size() == 1 && envSchemas && envData && envScripts)
+                    {
+                        // synthesize args: [cmd, schemas, data, scripts]
+                        std::vector<std::string> a = {cmd, envSchemas, envData, envScripts};
+                        // Re-run the handler with synthesized args
+                        // Set current working directory to data
+                        std::error_code ec;
+                        std::filesystem::current_path(a[2], ec);
+                        if (ec)
+                        {
+                            print_json_error(cmd, "failed to set data directory: " + ec.message());
+                            return false;
+                        }
+
+                        engine.resetBackend();
+                        sm.clear();
+
+                        auto schemas = load_schema_sources_dir(a[1]);
+                        sm.loadSources(schemas);
+                        engine.init(sm.registry());
+
+                        auto data = load_data_docs_dir(a[2]);
+                        engine.loadData(data);
+                        engine.flushPending();
+
+                        luaRegistry.clear();
+                        luaRegistry.loadScripts(load_script_sources_dir(a[3]));
+                        print_json_ok(cmd, {{"schemas", schemas.size()}, {"data", data.size()}});
+                        return false;
+                    }
+
                     print_json_error(cmd, "usage: load-workspace <schemas> <data> <scripts>");
                     return false;
                 }
@@ -1611,6 +1656,23 @@ try
             print_json_error("args", "missing command");
             print_json_ok("help", {{"text", help_text()}});
             return 1;
+        }
+
+        // Apply environment defaults if flags were not provided
+        if (!schemas_dir)
+        {
+            if (const char *p = std::getenv("HEPHORA_SCHEMAS"))
+                schemas_dir = std::string(p);
+        }
+        if (!data_dir)
+        {
+            if (const char *p = std::getenv("HEPHORA_DATA"))
+                data_dir = std::string(p);
+        }
+        if (!scripts_dir)
+        {
+            if (const char *p = std::getenv("HEPHORA_SCRIPTS"))
+                scripts_dir = std::string(p);
         }
 
         if (!schemas_dir || !data_dir || !scripts_dir)

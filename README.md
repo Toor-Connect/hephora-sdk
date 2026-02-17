@@ -403,6 +403,30 @@ hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
 # => {"ok":true,"command":"query","result":{"count":1,"rows":[{"profile":"requirement","id":"5b1dfc12-1f6a-4b67-9f40-1c0e0b7f6c8c","label":"Brake latency under 100 ms"}]}}
 ```
 
+## Environment Variables (defaults for CLI paths)
+
+You can set environment variables to avoid passing `--schemas`, `--data`, and `--scripts` each time. Flags always override environment values.
+
+- HEPHORA_SCHEMAS: directory for schema YAMLs
+- HEPHORA_DATA: directory for data YAMLs
+- HEPHORA_SCRIPTS: directory for Lua scripts
+
+Examples:
+
+```bash
+export HEPHORA_SCHEMAS=./schemas
+export HEPHORA_DATA=./data
+export HEPHORA_SCRIPTS=./scripts
+
+# Run without flags
+hephora-sdk-cli list project
+
+# Interactive: start CLI then load workspace from env without args
+hephora-sdk-cli --help
+# Inside the CLI prompt:
+# > load-workspace
+```
+
 ## Available apps
 - **CLI**: `hephora-sdk-cli` for interactive and non‑interactive workflows. See [`apps/cli/README-hephora-cli.md`](apps/cli/README-hephora-cli.md).
 
@@ -461,10 +485,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy the CLI into PATH
 COPY --from=hephora-builder /opt/hephora/bin/hephora-sdk-cli /usr/local/bin/hephora-sdk-cli
-
-# Optionally copy example schemas/scripts if you vendor them
-# COPY ./schemas /app/schemas
-# COPY ./scripts /app/scripts
 
 WORKDIR /app
 ENTRYPOINT ["hephora-sdk-cli"]
