@@ -219,7 +219,15 @@ static FieldValue parse_value(const std::string &raw)
             return FieldValue(static_cast<int>(n));
     }
 
-    // 3) Comma-separated list without brackets: tags=a,b,c
+    // 3) Plain string (dequote if wrapped) - check BEFORE comma detection
+    if (v.size() >= 2 &&
+        ((v.front() == '"' && v.back() == '"') || (v.front() == '\'' && v.back() == '\'')))
+    {
+        v = v.substr(1, v.size() - 2);
+        return FieldValue(v);
+    }
+
+    // 4) Comma-separated list without brackets: tags=a,b,c
     if (v.find(',') != std::string::npos)
     {
         ArrayData arr;
@@ -233,11 +241,7 @@ static FieldValue parse_value(const std::string &raw)
         return FieldValue(arr);
     }
 
-    // 4) Plain string (dequote if wrapped)
-    if (v.size() >= 2 &&
-        ((v.front() == '"' && v.back() == '"') || (v.front() == '\'' && v.back() == '\'')))
-        v = v.substr(1, v.size() - 2);
-
+    // 5) Unquoted string
     return FieldValue(v);
 }
 

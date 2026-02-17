@@ -66,6 +66,32 @@ Error:
 {"ok":false,"command":"create","error":"..."}
 ```
 
+## Value parsing and quoting
+
+The CLI uses a simple parser for field values in `create` and `update` commands:
+
+### Rules
+
+1. **Bracketed arrays**: `[a,b,c]` → treated as an array
+2. **null/bool/int**: `null`, `true`, `false`, `123` → typed values
+3. **Quoted strings**: `"text"` or `'text'` → single string value
+4. **Unquoted comma-separated**: `a,b,c` → treated as an array
+5. **Plain unquoted text** → string value
+
+### Important: Strings with commas
+
+**Always quote strings containing commas** to prevent them from being split into arrays:
+
+```bash
+# ✅ Correct - quotes preserve the entire string
+update requirement R-1 title="In a 10-minute capture, the elapsed time shall be less than 500 ms"
+
+# ❌ Wrong - would be split into an array
+update requirement R-1 title=In a 10-minute capture, the elapsed time shall be less than 500 ms
+```
+
+**Note**: The parser processes quotes **before** checking for commas, so quoted strings are always treated as single values, even if they contain commas.
+
 ### Create some data
 
 > IDs are auto-generated. The created node (including its `id`) is returned in the `create` response.
@@ -297,8 +323,9 @@ are resolved after all rows exist.
 
 - **“unknown profile”** — run `load-schemas <dir>` first.
 - **“profile is a child … use parent=<id>”** — you must pass a parent for child
-  nodes on create.
-- **Updating arrays does nothing** — remember the rules:
+  nodes on create.- **"arrays must be modified via arr-* commands"** — you tried to pass an array value
+  (e.g., `field=a,b,c`) to `create` or `update`. Use `arr-add` instead, or quote the
+  entire value if it's a single string containing commas.- **Updating arrays does nothing** — remember the rules:
   - `arr-add` merges a **single** element into the existing array.
   - `arr-set field[i]=…` replaces a slot or sub-field.
   - `arr-del` needs either `index=<n>` or `value=<v>`.
@@ -324,17 +351,20 @@ arr-add requirement <requirement_id> references <attachment_id>
 arr-add requirement <requirement_id> tags "hard real-time"
 arr-add requirement <requirement_id> objects name="Brake ECU" value="HW-REV-B"
 
-# 4) Inspect
+# 4) Update with quoted strings containing commas
+update requirement <requirement_id> acceptance_criteria="In a 10-minute capture, the elapsed time between consecutive samples shall be less than 500 ms"
+
+# 5) Inspect
 get requirement <requirement_id>
 get-field requirement <requirement_id> objects
 get-select requirement <requirement_id> objects[0]
 get-select requirement <requirement_id> objects[0].name
 
-# 5) Modify and remove
+# 6) Modify and remove
 arr-set requirement <requirement_id> objects[0].name="Brake ECU v2"
 arr-del requirement <requirement_id> tags value="hard real-time"
 
-# 6) Save to YAML
+# 7) Save to YAML
 # (auto-flushed after mutations)
 ```
 

@@ -403,6 +403,45 @@ TEST_CASE("hephora-sdk-cli non-interactive workflow", "[cli]")
             unsetenv("HEPHORA_SCRIPTS");
         }
 
+        SECTION("quoted strings with commas are not split into arrays")
+        {
+            std::string text_with_commas = "In a 10-minute capture, the elapsed time between consecutive temperature samples shall be less than or equal to 500 ms for all samples.";
+            
+            // Use interactive mode with input file to avoid shell quote issues
+            fs::path in = tmp / "in_quotes.txt";
+            std::string input =
+                "load-workspace " + schemas.string() + " " + data.string() + " " + scripts.string() + "\n"
+                "update requirement R-1 title=\"" + text_with_commas + "\"\n"
+                "get requirement R-1\n"
+                "quit\n";
+
+            auto out_text = run_cmd_with_input("\"" + cli + "\" --interactive", input, out, in);
+            auto lines = parse_json_lines(out_text);
+            
+            // Find the update response
+            bool update_ok = false;
+            for (const auto& line : lines) {
+                if (line.contains("command") && line["command"] == "update") {
+                    update_ok = line["ok"].get<bool>();
+                    if (!update_ok && line.contains("error")) {
+                        INFO("Update error: " << line["error"].get<std::string>());
+                    }
+                    break;
+                }
+            }
+            REQUIRE(update_ok);
+
+            // Find the get response and verify
+            for (const auto& line : lines) {
+                if (line.contains("command") && line["command"] == "get" && line["ok"].get<bool>()) {
+                    auto title = line["result"]["node"]["fields"]["title"];
+                    REQUIRE(title.is_string());
+                    REQUIRE(title.get<std::string>() == text_with_commas);
+                    break;
+                }
+            }
+        }
+
         SECTION("interactive batch workflow")
         {
             fs::path in = tmp / "in.txt";
