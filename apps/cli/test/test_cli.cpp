@@ -84,6 +84,18 @@ static std::string run_cmd(const std::string &cmd, const fs::path &out_file)
     return oss.str();
 }
 
+static std::pair<int, std::string> run_cmd_allow_fail(const std::string &cmd, const fs::path &out_file)
+{
+    std::string full = cmd + " > \"" + out_file.string() + "\" 2>&1";
+    int status = std::system(full.c_str());
+    int code = normalized_exit_code(status);
+
+    std::ifstream in(out_file, std::ios::binary);
+    std::ostringstream oss;
+    oss << in.rdbuf();
+    return {code, oss.str()};
+}
+
 static nlohmann::json parse_json_output(const std::string &output)
 {
     return nlohmann::json::parse(output);
@@ -356,6 +368,39 @@ TEST_CASE("hephora-sdk-cli non-interactive workflow", "[cli]")
             auto list_json = parse_json_output(list_out);
             REQUIRE(list_json["ok"].get<bool>());
             REQUIRE(list_json["result"].contains("rows"));
+        }
+
+        SECTION("non-interactive requires workspace flags or env")
+        {
+            unsetenv("HEPHORA_SCHEMAS");
+            unsetenv("HEPHORA_DATA");
+            unsetenv("HEPHORA_SCRIPTS");
+
+            auto [code, output] = run_cmd_allow_fail("\"" + cli + "\" list project", out);
+            REQUIRE(code != 0);
+
+            auto lines = parse_json_lines(output);
+            REQUIRE(lines.size() >= 2);
+            REQUIRE_FALSE(lines[0]["ok"].get<bool>());
+            REQUIRE(lines[0]["error"].get<std::string>().find("non-interactive mode requires") != std::string::npos);
+            REQUIRE(lines[1]["ok"].get<bool>());
+            REQUIRE(lines[1]["command"].get<std::string>() == "help");
+        }
+
+        SECTION("non-interactive uses env defaults")
+        {
+            setenv("HEPHORA_SCHEMAS", schemas.string().c_str(), 1);
+            setenv("HEPHORA_DATA", data.string().c_str(), 1);
+            setenv("HEPHORA_SCRIPTS", scripts.string().c_str(), 1);
+
+            auto list_out = run_cmd("\"" + cli + "\" list project", out);
+            auto list_json = parse_json_output(list_out);
+            REQUIRE(list_json["ok"].get<bool>());
+            REQUIRE(list_json["result"]["count"].get<int>() == 2);
+
+            unsetenv("HEPHORA_SCHEMAS");
+            unsetenv("HEPHORA_DATA");
+            unsetenv("HEPHORA_SCRIPTS");
         }
 
         SECTION("interactive batch workflow")
