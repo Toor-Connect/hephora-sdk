@@ -16,9 +16,9 @@ else()
 endif()
 
 target_include_directories(${LIBRARY_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
-    PRIVATE ${HEPHORA_LUA_INCLUDE_DIRS})
+    PUBLIC ${HEPHORA_LUA_INCLUDE_DIRS})
 target_link_libraries(${LIBRARY_NAME} PUBLIC hephora-core
-    PRIVATE ${HEPHORA_LUA_LIBRARIES} nlohmann_json::nlohmann_json)
+    PUBLIC ${HEPHORA_LUA_LIBRARIES} nlohmann_json::nlohmann_json)
 
 # enable_testing()
 # include(Catch)
