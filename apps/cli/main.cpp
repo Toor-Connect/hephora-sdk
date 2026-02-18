@@ -245,12 +245,14 @@ static FieldValue parse_value(const std::string &raw)
     return FieldValue(v);
 }
 
+static ObjectData parse_object_literal(std::string s);
+
 static FieldValue parse_value_no_array(const std::string &raw)
 {
-    auto v = parse_value(raw);
-    if (v.isArray())
-        throw std::runtime_error("arrays must be modified via arr-* commands");
-    return v;
+    std::string v = trim(raw);
+    if (v.size() >= 2 && v.front() == '{' && v.back() == '}')
+        return FieldValue(parse_object_literal(v));
+    return parse_value(raw);
 }
 
 static FieldValue field_value_from_json(const nlohmann::json &j)

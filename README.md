@@ -379,6 +379,11 @@ hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
 	create project label="Phoenix" project_name=Phoenix version=1.0
 # => {"ok":true,"command":"update","result":{"node":{"profile":"project","id":"8e8b1b74-6c2b-4a52-8b3f-5c7e4f1b9a2a","label":"Phoenix","parent":"","fields":{"project_name":"Phoenix","version":"1.0"}}}}
 
+# create with arrays/object literals in a single call
+hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
+	create requirement parent=8e8b1b74-6c2b-4a52-8b3f-5c7e4f1b9a2a \
+	title="Thermal sampling" category=[functional,safety] specs={manufacturer:Acme,warranty_years:3}
+
 hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
 	update requirement 5b1dfc12-1f6a-4b67-9f40-1c0e0b7f6c8c parent=8e8b1b74-6c2b-4a52-8b3f-5c7e4f1b9a2a \
 	title="Brake latency under 100 ms" priority=high active=true
@@ -404,6 +409,10 @@ hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
 ```
 
 Interactive mode (prompt)
+
+Notes:
+- `create`/`update` accept arrays and object literals directly (for example `tags=[a,b]` and `specs={k:v}`).
+- Use quotes for string values containing commas, for example `acceptance_criteria="x, y, z"`.
 
 Start the CLI prompt explicitly with `--interactive` (or `-it`). Without it, you must pass a command.
 

@@ -163,8 +163,10 @@ arr-set <profile> <id> <field>[i][.sub]=<value>
   `parent=<parent_id>`. For root profiles, do **not** pass `parent`.
 - **update** patches an existing row. You only pass the fields you want to
   change; label/parent are preserved if you don’t supply them.
-- **arrays** are **not** allowed in `create`/`update` values. Use the `arr-*`
-  commands to add, set, or remove array items.
+- **arrays and object literals are allowed** in `create`/`update` values.
+  - Arrays: `tags=[alpha,beta]`
+  - Object literals: `specs={manufacturer:Acme,warranty_years:7}`
+  Use `arr-*` commands when you want to mutate a specific array element after creation.
 
 **Examples**
 
@@ -172,6 +174,7 @@ arr-set <profile> <id> <field>[i][.sub]=<value>
 # Create
 create project label="Nova" project_name=Nova version=2
 create requirement parent=<project_id> title="Boot under 2s" priority=medium active=true
+create requirement parent=<project_id> title="Sensor cadence" tags=[telemetry,safety] specs={manufacturer:Acme,warranty_years:5}
 
 # Patch specific fields
 update requirement <requirement_id> priority=high
@@ -323,9 +326,10 @@ are resolved after all rows exist.
 
 - **“unknown profile”** — run `load-schemas <dir>` first.
 - **“profile is a child … use parent=<id>”** — you must pass a parent for child
-  nodes on create.- **"arrays must be modified via arr-* commands"** — you tried to pass an array value
-  (e.g., `field=a,b,c`) to `create` or `update`. Use `arr-add` instead, or quote the
-  entire value if it's a single string containing commas.- **Updating arrays does nothing** — remember the rules:
+  nodes on create.
+- **Unexpected array parsing from text** — unquoted comma-separated values (e.g. `field=a,b,c`) are parsed as arrays.
+  Quote full strings with commas: `field="a,b,c"`.
+- **Updating arrays does nothing** — remember the rules:
   - `arr-add` merges a **single** element into the existing array.
   - `arr-set field[i]=…` replaces a slot or sub-field.
   - `arr-del` needs either `index=<n>` or `value=<v>`.

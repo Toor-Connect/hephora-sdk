@@ -370,6 +370,27 @@ TEST_CASE("hephora-sdk-cli non-interactive workflow", "[cli]")
             REQUIRE(list_json["result"].contains("rows"));
         }
 
+        SECTION("create accepts arrays and object fields inline")
+        {
+            auto create_out = run_cmd(base + "create project label=Inline title=Inline tags=[alpha,beta] refs=[A-1] specs={manufacturer:Acme,warranty_years:7}", out);
+            auto create_json = parse_json_output(create_out);
+            REQUIRE(create_json["ok"].get<bool>());
+
+            auto fields = create_json["result"]["node"]["fields"];
+            REQUIRE(fields["tags"].is_array());
+            REQUIRE(fields["tags"].size() == 2);
+            REQUIRE(fields["tags"][0].get<std::string>() == "alpha");
+            REQUIRE(fields["tags"][1].get<std::string>() == "beta");
+
+            REQUIRE(fields["refs"].is_array());
+            REQUIRE(fields["refs"].size() == 1);
+            REQUIRE(fields["refs"][0].get<std::string>() == "A-1");
+
+            REQUIRE(fields["specs"].is_object());
+            REQUIRE(fields["specs"]["manufacturer"].get<std::string>() == "Acme");
+            REQUIRE(fields["specs"]["warranty_years"].get<int>() == 7);
+        }
+
         SECTION("non-interactive requires workspace flags or env")
         {
             unsetenv("HEPHORA_SCHEMAS");
