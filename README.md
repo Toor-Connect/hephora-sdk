@@ -406,6 +406,14 @@ hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts get-childr
 hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
 	query '{"profile":"requirement","query":[[{"field":"priority","operator":"EQ","value":"high"}]]}'
 # => {"ok":true,"command":"query","result":{"count":1,"rows":[{"profile":"requirement","id":"5b1dfc12-1f6a-4b67-9f40-1c0e0b7f6c8c","label":"Brake latency under 100 ms"}]}}
+
+# visualize the workspace as an ASCII tree
+hephora-sdk-viz --schemas ./schemas --data ./data --scripts ./scripts
+# Example output:
+# Hephora Tree (root profile: project)
+# └─ project/8e8b1b74-6c2b-4a52-8b3f-5c7e4f1b9a2a (Phoenix)
+#    ├─ requirement/5b1dfc12-1f6a-4b67-9f40-1c0e0b7f6c8c (Brake latency under 100 ms)
+#    └─ test_case/3a4f1b2c-9e9e-4f0f-9e6a-2d9d3f6a9d7e (TC - Brake latency)
 ```
 
 Interactive mode (prompt)
@@ -449,6 +457,7 @@ hephora-sdk-cli --help
 
 ## Available apps
 - **CLI**: `hephora-sdk-cli` for interactive and non‑interactive workflows. See [`apps/cli/README-hephora-cli.md`](apps/cli/README-hephora-cli.md).
+- **Visualizer**: hephora-sdk-viz renders an ASCII node tree by invoking the CLI with your workspace paths. See [apps/viz/README-hephora-viz.md](apps/viz/README-hephora-viz.md).
 
 ## Dependencies (external libraries)
 - [`yaml-cpp`](https://github.com/jbeder/yaml-cpp)
@@ -468,7 +477,7 @@ hephora-sdk-cli --help
 
 ## Docker Integration (install in other projects)
 
-Install and use `hephora-sdk-cli` in other Dockerized projects. Keep it simple: build once (Option A) or copy from a base image (Option B).
+Install and use `hephora-sdk-cli` and `hephora-sdk-viz` in other Dockerized projects. Keep it simple: build once (Option A) or copy from a base image (Option B).
 
 ### Option A — Build from source
 
@@ -503,8 +512,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		libsqlite3-0 liblua5.4-0 libstdc++6 ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Copy the CLI into PATH
+# Copy the CLI + visualizer into PATH
 COPY --from=hephora-builder /opt/hephora/bin/hephora-sdk-cli /usr/local/bin/hephora-sdk-cli
+COPY --from=hephora-builder /opt/hephora/bin/hephora-sdk-viz /usr/local/bin/hephora-sdk-viz
 
 WORKDIR /app
 ENTRYPOINT ["hephora-sdk-cli"]
@@ -515,6 +525,9 @@ Build and run:
 ```bash
 docker build -t my-app:with-hephora .
 docker run --rm -it my-app:with-hephora --help
+
+# Run visualizer
+docker run --rm -it --entrypoint hephora-sdk-viz my-app:with-hephora --help
 ```
 
 
@@ -529,5 +542,6 @@ The CLI links the SDK’s static libraries; runtime deps are minimal.
 ### Notes
 
 - Install prefix: In Option A the CLI ends up at `/opt/hephora/bin/hephora-sdk-cli` and is copied to `/usr/local/bin`.
+- Visualizer binary is also installed as `/usr/local/bin/hephora-sdk-viz`.
 - Linux-only: Current builds target Linux.
 - Reproducibility: Pin to a tag/commit in Option A.
