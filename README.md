@@ -456,8 +456,8 @@ hephora-sdk-cli --help
 ```
 
 ## Available apps
-- **CLI**: `hephora-sdk-cli` for interactive and non‑interactive workflows. See [`apps/cli/README-hephora-cli.md`](apps/cli/README-hephora-cli.md).
-- **Visualizer**: hephora-sdk-viz renders an ASCII node tree by invoking the CLI with your workspace paths. See [apps/viz/README-hephora-viz.md](apps/viz/README-hephora-viz.md).
+- **CLI**: `hephora-sdk-cli` for interactive and non‑interactive workflows. See [`apps/cli/README.md`](apps/cli/README.md).
+- **Visualizer**: hephora-sdk-viz renders an ASCII node tree by invoking the CLI with your workspace paths. See [apps/viz/README.md](apps/viz/README.md).
 
 ## Dependencies (external libraries)
 - [`yaml-cpp`](https://github.com/jbeder/yaml-cpp)
