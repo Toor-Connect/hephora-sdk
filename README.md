@@ -406,14 +406,27 @@ hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts get-childr
 hephora-sdk-cli --schemas ./schemas --data ./data --scripts ./scripts \
 	query '{"profile":"requirement","query":[[{"field":"priority","operator":"EQ","value":"high"}]]}'
 # => {"ok":true,"command":"query","result":{"count":1,"rows":[{"profile":"requirement","id":"5b1dfc12-1f6a-4b67-9f40-1c0e0b7f6c8c","label":"Brake latency under 100 ms"}]}}
+```
 
+### Example Visualizer calls
+
+```bash
 # visualize the workspace as an ASCII tree
 hephora-sdk-viz --schemas ./schemas --data ./data --scripts ./scripts
-# Example output:
-# Hephora Tree (root profile: project)
-# └─ project/8e8b1b74-6c2b-4a52-8b3f-5c7e4f1b9a2a (Phoenix)
-#    ├─ requirement/5b1dfc12-1f6a-4b67-9f40-1c0e0b7f6c8c (Brake latency under 100 ms)
-#    └─ test_case/3a4f1b2c-9e9e-4f0f-9e6a-2d9d3f6a9d7e (TC - Brake latency)
+
+# visualize a specific subtree
+hephora-sdk-viz --schemas ./schemas --data ./data --scripts ./scripts \
+	--profile project --id 8e8b1b74-6c2b-4a52-8b3f-5c7e4f1b9a2a
+
+# machine-readable output
+hephora-sdk-viz --format json --schemas ./schemas --data ./data --scripts ./scripts
+
+# only reference edges
+hephora-sdk-viz --refs-only --schemas ./schemas --data ./data --scripts ./scripts
+
+# filter roots using query passthrough
+hephora-sdk-viz --query '{"profile":"requirement","query":[[{"field":"priority","operator":"EQ","value":"high"}]]}' \
+	--schemas ./schemas --data ./data --scripts ./scripts
 ```
 
 Interactive mode (prompt)
