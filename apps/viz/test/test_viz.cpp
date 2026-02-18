@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <nlohmann/json.hpp>
 #include <sstream>
 #include <string>
 #include <sys/wait.h>
@@ -95,7 +96,9 @@ TEST_CASE("hephora-sdk-viz basic behavior", "[viz]")
                "    type: string\n"
                "children:\n"
                "  attachments:\n"
-               "    node: attachment\n");
+               "    node: attachment\n"
+               "  requirements:\n"
+               "    node: requirement\n");
 
     write_file(schemas / "attachment.yaml",
                "name: attachment\n"
@@ -104,6 +107,17 @@ TEST_CASE("hephora-sdk-viz basic behavior", "[viz]")
                "fields:\n"
                "  filename:\n"
                "    type: string\n");
+
+    write_file(schemas / "requirement.yaml",
+               "name: requirement\n"
+               "kind: node\n"
+               "description: Requirement\n"
+               "fields:\n"
+               "  title:\n"
+               "    type: string\n"
+               "  attachment_ref:\n"
+               "    type: reference\n"
+               "    target: attachment\n");
 
     write_file(data / "project.yaml",
                "_profile: project\n"
@@ -117,6 +131,14 @@ TEST_CASE("hephora-sdk-viz basic behavior", "[viz]")
                "_label: Spec PDF\n"
                "_parent_id: P-1\n"
                "filename: spec.pdf\n");
+
+    write_file(data / "requirement.yaml",
+               "_profile: requirement\n"
+               "_id: R-1\n"
+               "_label: Req One\n"
+               "_parent_id: P-1\n"
+               "title: Must link attachment\n"
+               "attachment_ref: A-1\n");
 
     fs::path out = tmp / "out.txt";
 
@@ -156,6 +178,99 @@ TEST_CASE("hephora-sdk-viz basic behavior", "[viz]")
         REQUIRE(text.find("Hephora Tree") != std::string::npos);
         REQUIRE(text.find("project/P-1") != std::string::npos);
         REQUIRE(text.find("attachment/A-1") != std::string::npos);
+        REQUIRE(text.find("requirement/R-1") != std::string::npos);
+    }
+
+    SECTION("include-refs in json adds ref edges")
+    {
+        std::string cmd = "\"" + viz + "\" --format json --include-refs --schemas \"" + schemas.string() + "\" --data \"" + data.string() + "\" --scripts \"" + scripts.string() + "\"";
+        auto text = run_cmd(cmd, out);
+        auto j = nlohmann::json::parse(text);
+        REQUIRE(j["ok"].get<bool>());
+        REQUIRE(j.contains("edges"));
+        REQUIRE(j["edges"].is_array());
+
+        bool found_req_to_att = false;
+        for (const auto &e : j["edges"])
+        {
+            if (e["kind"].get<std::string>() == "ref" &&
+                e["from"]["profile"].get<std::string>() == "requirement" &&
+                e["from"]["id"].get<std::string>() == "R-1" &&
+                e["to"]["profile"].get<std::string>() == "attachment" &&
+                e["to"]["id"].get<std::string>() == "A-1")
+            {
+                found_req_to_att = true;
+                break;
+            }
+        }
+        REQUIRE(found_req_to_att);
+    }
+
+    SECTION("refs-only json outputs reference edges")
+    {
+        std::string cmd = "\"" + viz + "\" --format json --refs-only --schemas \"" + schemas.string() + "\" --data \"" + data.string() + "\" --scripts \"" + scripts.string() + "\"";
+        auto text = run_cmd(cmd, out);
+        auto j = nlohmann::json::parse(text);
+        REQUIRE(j["ok"].get<bool>());
+        REQUIRE(j["mode"].get<std::string>() == "refs-only");
+        REQUIRE(j.contains("edges"));
+        REQUIRE(j["edges"].is_array());
+        REQUIRE_FALSE(j["edges"].empty());
+    }
+
+    SECTION("no-color option is accepted")
+    {
+        std::string cmd = "\"" + viz + "\" --no-color --schemas \"" + schemas.string() + "\" --data \"" + data.string() + "\" --scripts \"" + scripts.string() + "\"";
+        auto text = run_cmd(cmd, out);
+        REQUIRE(text.find("Hephora Tree") != std::string::npos);
+        REQUIRE(text.find("\x1b[") == std::string::npos);
+    }
+
+    SECTION("json format with all fields includes private keys")
+    {
+        std::string cmd = "\"" + viz + "\" --format json --show-all-fields --schemas \"" + schemas.string() + "\" --data \"" + data.string() + "\" --scripts \"" + scripts.string() + "\"";
+        auto text = run_cmd(cmd, out);
+        auto j = nlohmann::json::parse(text);
+
+        REQUIRE(j["ok"].get<bool>());
+        REQUIRE(j["format"].get<std::string>() == "json");
+        REQUIRE(j["nodes"].is_array());
+        REQUIRE_FALSE(j["nodes"].empty());
+
+        const auto &root = j["nodes"][0];
+        REQUIRE(root.contains("fields"));
+        REQUIRE(root.contains("_profile"));
+        REQUIRE(root.contains("_id"));
+        REQUIRE(root.contains("_label"));
+        REQUIRE(root.contains("_parent_id"));
+        REQUIRE(root["_profile"].get<std::string>() == "project");
+        REQUIRE(root["_id"].get<std::string>() == "P-1");
+    }
+
+    SECTION("query passthrough filters tree roots")
+    {
+        const std::string query = "{\"profile\":\"attachment\",\"query\":[[{\"field\":\"filename\",\"operator\":\"EQ\",\"value\":\"spec.pdf\"}]]}";
+        std::string cmd = "\"" + viz + "\" --query '" + query + "' --schemas \"" + schemas.string() + "\" --data \"" + data.string() + "\" --scripts \"" + scripts.string() + "\"";
+        auto text = run_cmd(cmd, out);
+        REQUIRE(text.find("Hephora Tree (query)") != std::string::npos);
+        REQUIRE(text.find("attachment/A-1") != std::string::npos);
+        REQUIRE(text.find("project/P-1") == std::string::npos);
+    }
+
+    SECTION("query passthrough works in json mode")
+    {
+        const std::string query = "{\"profile\":\"attachment\",\"query\":[[{\"field\":\"filename\",\"operator\":\"EQ\",\"value\":\"spec.pdf\"}]]}";
+        std::string cmd = "\"" + viz + "\" --format json --query '" + query + "' --schemas \"" + schemas.string() + "\" --data \"" + data.string() + "\" --scripts \"" + scripts.string() + "\"";
+        auto text = run_cmd(cmd, out);
+        auto j = nlohmann::json::parse(text);
+
+        REQUIRE(j["ok"].get<bool>());
+        REQUIRE(j["format"].get<std::string>() == "json");
+        REQUIRE(j.contains("query"));
+        REQUIRE(j["nodes"].is_array());
+        REQUIRE(j["nodes"].size() == 1);
+        REQUIRE(j["nodes"][0]["profile"].get<std::string>() == "attachment");
+        REQUIRE(j["nodes"][0]["id"].get<std::string>() == "A-1");
     }
 
     fs::remove_all(tmp);

@@ -3,6 +3,8 @@
 Hephora Viz is a standalone C++ binary named hephora-sdk-viz.
 It renders your workspace data as an ASCII tree.
 
+It can also output JSON for tooling/automation.
+
 ## What it does
 
 - Loads your workspace through hephora-sdk-cli commands
@@ -11,6 +13,7 @@ It renders your workspace data as an ASCII tree.
 - Lists root nodes
 - Recursively expands children with get-children
 - Prints a tree with profile, id, and label
+- Optionally includes reference links (`--include-refs`) or renders refs only (`--refs-only`)
 
 ## Why it is a separate binary
 
@@ -76,10 +79,77 @@ export HEPHORA_SCRIPTS=./temp/scripts
   --max-depth 5
 ```
 
+### JSON output
+
+```bash
+./build/apps/viz/hephora-sdk-viz \
+  --format json \
+  --schemas ./temp/schemas \
+  --data ./temp/data \
+  --scripts ./temp/scripts
+```
+
+### JSON output with reference edges
+
+```bash
+./build/apps/viz/hephora-sdk-viz \
+  --format json \
+  --include-refs \
+  --schemas ./temp/schemas \
+  --data ./temp/data \
+  --scripts ./temp/scripts
+```
+
+### References only (tree or JSON)
+
+```bash
+# tree
+./build/apps/viz/hephora-sdk-viz --refs-only --schemas ./temp/schemas --data ./temp/data --scripts ./temp/scripts
+
+# json
+./build/apps/viz/hephora-sdk-viz --format json --refs-only --schemas ./temp/schemas --data ./temp/data --scripts ./temp/scripts
+```
+
+### JSON output with all fields (including private keys)
+
+```bash
+./build/apps/viz/hephora-sdk-viz \
+  --format json \
+  --show-all-fields \
+  --schemas ./temp/schemas \
+  --data ./temp/data \
+  --scripts ./temp/scripts
+```
+
+Includes extra keys per node: `_profile`, `_id`, `_label`, `_parent_id`.
+
+### Filter roots with query passthrough
+
+`--query` passes JSON directly to `hephora-sdk-cli query` and uses matching rows as visualization roots.
+
+```bash
+./build/apps/viz/hephora-sdk-viz \
+  --query '{"profile":"attachment","query":[[{"field":"filename","operator":"EQ","value":"spec.pdf"}]]}' \
+  --schemas ./temp/schemas \
+  --data ./temp/data \
+  --scripts ./temp/scripts
+```
+
 ### Help
 
 ```bash
 ./build/apps/viz/hephora-sdk-viz --help
+```
+
+### Colors
+
+Tree output supports ANSI colors:
+
+```bash
+# default: colors only when writing to a terminal
+
+# disable colors explicitly
+./build/apps/viz/hephora-sdk-viz --no-color ...
 ```
 
 ## Arguments
@@ -87,6 +157,12 @@ export HEPHORA_SCRIPTS=./temp/scripts
 - --schemas <dir> : schema folder
 - --data <dir> : data folder
 - --scripts <dir> : Lua scripts folder
+- --format <tree|json> : output format (default: tree)
+- --show-all-fields : include full fields and private keys in JSON output only (ignored in tree format)
+- --query <json> : passthrough to CLI `query`; returned rows become traversal roots
+- --include-refs : include reference links in output
+- --refs-only : show only reference links (implies `--include-refs`)
+- --no-color : disable tree colors
 - --profile <name> : optional start profile
 - --id <node-id> : optional start id (requires --profile)
 - --max-depth <n> : optional traversal limit (default 6)

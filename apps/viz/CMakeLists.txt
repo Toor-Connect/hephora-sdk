@@ -12,7 +12,7 @@ enable_testing()
 include(Catch)
 
 add_executable(hephora-viz-tests test/test_viz.cpp)
-target_link_libraries(hephora-viz-tests PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(hephora-viz-tests PRIVATE Catch2::Catch2WithMain nlohmann_json::nlohmann_json)
 target_compile_definitions(hephora-viz-tests PRIVATE VIZ_EXE_PATH="$<TARGET_FILE:viz>")
 add_dependencies(hephora-viz-tests viz)
 
