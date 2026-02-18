@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <optional>
 #include <set>
@@ -71,7 +72,29 @@ static std::string run_capture(const std::string &cmd)
 
 static nlohmann::json run_cli_json(const Options &opt, const std::string &command)
 {
-    std::string cli = CLI_EXE_PATH;
+    std::string cli;
+
+    // 1) Explicit override for installed/container setups
+    if (const char *envCli = std::getenv("HEPHORA_CLI_BIN"); envCli && *envCli)
+    {
+        cli = envCli;
+    }
+    else
+    {
+        // 2) Build-time path (works in build tree)
+        cli = CLI_EXE_PATH;
+
+        // If compiled absolute build path is not present (e.g. installed binary), ignore it.
+        if (!cli.empty())
+        {
+            std::error_code ec;
+            std::filesystem::path p(cli);
+            if (p.is_absolute() && !std::filesystem::exists(p, ec))
+                cli.clear();
+        }
+    }
+
+    // 3) Runtime PATH fallback
     if (cli.empty())
         cli = "hephora-sdk-cli";
 
@@ -159,6 +182,7 @@ static void print_help()
               << "  hephora-sdk-viz [--schemas <dir>] [--data <dir>] [--scripts <dir>] [--profile <name>] [--id <node-id>] [--max-depth <n>]\n\n"
               << "Behavior:\n"
               << "  - Runs hephora-sdk-cli in non-interactive mode.\n"
+              << "  - Optional CLI override: HEPHORA_CLI_BIN=/path/to/hephora-sdk-cli\n"
               << "  - Paths can be passed with flags or inherited from env vars:\n"
               << "      HEPHORA_SCHEMAS, HEPHORA_DATA, HEPHORA_SCRIPTS\n"
               << "  - If --profile and --id are provided, renders that node subtree.\n"

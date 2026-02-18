@@ -39,6 +39,12 @@ Path inputs follow the same non-interactive convention as hephora-sdk-cli:
 - Or omit them and use env vars: `HEPHORA_SCHEMAS`, `HEPHORA_DATA`, `HEPHORA_SCRIPTS`
 - CLI flags override environment values
 
+CLI binary resolution order:
+
+1. `HEPHORA_CLI_BIN` (if set)
+2. Build-time CLI path (when available)
+3. `hephora-sdk-cli` from `PATH`
+
 ### Visualize all root nodes
 
 ```bash
